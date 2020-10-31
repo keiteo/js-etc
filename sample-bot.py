@@ -98,7 +98,7 @@ def bondStrat1(message, exchange):
     buyArray = message["buy"]
     sellArray = message["sell"]
     buyOrders = {"size": 0, "price":0}
-    sellOrders = {"size": 0, "price": 0}
+    sellOrders = {"size": 0, "price": 100}
     for order in buyArray:
         if order[0] > fairValue:
             sellOrders["size"] += order[1]
