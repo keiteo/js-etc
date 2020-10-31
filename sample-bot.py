@@ -127,7 +127,7 @@ def handleBook(message, exchange):
         handleBonds(message, exchange)
     elif (message.symbol =="VALBZ"):
         return
-    elif (message.symbol =="VALE":
+    elif (message.symbol =="VALE"):
         return
     elif (message.symbol =="GS"):
         return
