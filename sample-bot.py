@@ -123,19 +123,19 @@ def handleBonds(message, exchange):
 # receives a "book" message to see prices
 # message format: {"type":"book","symbol":"SYM","buy":[[PRICE,SIZE], ...],"sell":[...]}
 def handleBook(message, exchange):
-    if (message.symbol == "BOND"):
+    if (message["symbol"] == "BOND"):
         handleBonds(message, exchange)
-    elif (message.symbol =="VALBZ"):
+    elif (message["symbol"] =="VALBZ"):
         return
-    elif (message.symbol =="VALE"):
+    elif (message["symbol"] =="VALE"):
         return
-    elif (message.symbol =="GS"):
+    elif (message["symbol"] =="GS"):
         return
-    elif (message.symbol =="MS"):
+    elif (message["symbol"] =="MS"):
         return
-    elif (message.symbol =="WFC"):
+    elif (message["symbol"] =="WFC"):
         return
-    elif (message.symbol =="XLF"):
+    elif (message["symbol"] =="XLF"):
         return
 
 # ~~~~~============== DATA EXTRACTION CODE ==============~~~
