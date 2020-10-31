@@ -135,7 +135,7 @@ def handleBook(message, exchange):
         return
     elif (message["symbol"] =="WFC"):
         return
-    elif (message["symbol"]] =="XLF"):
+    elif (message["symbol"] =="XLF"):
         return
 
 # ~~~~~============== DATA EXTRACTION CODE ==============~~~
