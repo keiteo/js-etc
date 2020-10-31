@@ -126,11 +126,17 @@ def handleBook(message, exchange):
     if (message.symbol == "BOND"):
         handleBonds(message, exchange)
     elif (message.symbol =="VALBZ"):
+        return
     elif (message.symbol =="VALE":
+        return
     elif (message.symbol =="GS"):
+        return
     elif (message.symbol =="MS"):
+        return
     elif (message.symbol =="WFC"):
+        return
     elif (message.symbol =="XLF"):
+        return
 
 # ~~~~~============== DATA EXTRACTION CODE ==============~~~
 
