@@ -42,6 +42,8 @@ def read_from_exchange(exchange):
     return json.loads(exchange.readline())
 
 # ~~~~~============== SYMBOLS TRACKER ==============~~~
+bondBook = []
+
 bond = []
 valbz = []
 vale = []
@@ -51,35 +53,102 @@ wfc = []
 xlf = []
 order_id = 0
 
+bondAvg = 0
+valbzAvg = 0
+valeAvg = 0
+gsAvg = 0
+msAvg = 0
+wfcAvg = 0
+xlfAvg = 0
+
+#valeSum = 0
+# valbzBuyAvg = 0
+# valbzSellAvg = 0
+# valeBuyAvg = 0
+# valeSellAvg = 0
+# valbzBuSSize = 0
+# valbzSellSize = 0
+# valeBuySize = 0
+# valeSellSize = 0
+# valbzBuySum = 0
+# valbzSellSum = 0
+# valbzBuySum = 0
+# valbzSellSize = 0
+
+
+def mean(arr):
+    return sum(arr)//len(arr)
+
 # ~~~~~============== Execution Code ==============~~~~~
 def executeOrder(symbol, direction, price, size, exchange): # Direction is BUY or SELL
     global order_id
-    jsonObject = {
-        "type": "add",
-        "order_id": order_id,
-        "symbol": symbol,
-        "dir": direction,
-        "price": price,
-        "size": size
-    }
-    print("JSON OBJECT IS ", jsonObject)
-    write_to_exchange(exchange, jsonObject) 
-    order_id += 1
-    # TODO handle accept and reject
+    if (price): 
+        # if price exists. Is buy or sell order
+        jsonObject = {
+            "type": "add",
+            "order_id": order_id,
+            "symbol": symbol,
+            "dir": direction,
+            "price": price,
+            "size": size
+        }
+        print("JSON OBJECT IS ", jsonObject)
+        write_to_exchange(exchange, jsonObject) 
+        order_id += 1
+    else:
+        # price don't exist. Is convert order
+        jsonObject = {
+            "type": "convert",
+            "order_id": order_id,
+            "symbol": symbol,
+            "dir": direction,
+            "size": size
+        }
+        write_to_exchange(exchange, jsonObject)
+        order_id += 1
 
-def executeConvert(symbol, direction, size):
-    global order_id
+# def convertFromVALE(size):
+#     global order_id
+
+#     jsonObject = {
+#         "type": "convert",
+#         "order_id": order_id,
+#         "symbol": "VALE",
+#         "dir": "BUY",
+#         "size": size
+#     }
+#     write_to_exchange(exchange, jsonObject)
+#     print("Convert from VALE ", order_id)
+#     order_id += 1
+
+# def convertFromVALBZ(size):
+#     global order_id
+
+#     jsonObject = {
+#         "type": "convert",
+#         "order_id": order_id,
+#         "symbol": "VALBZ",
+#         "dir": "BUY",
+#         "size": size
+#     }
+#     write_to_exchange(exchange, jsonObject)
+#     print("Convert from VALBZ ", order_id)
+#     order_id += 1
+
+
+# def executeConvert(symbol, direction, size):
+#     global order_id
     
-    jsonObject = {
-        "type": "convert",
-        "order_id": order_id,
-        "symbol" : symbol,
-        "dir": direction,
-        "size": size
-    }
-    write_to_exchange(exchange, jsonObject)
-    print("Convert for order ", order_id)
-    order_id += 1
+#     jsonObject = {
+#         "type": "convert",
+#         "order_id": order_id,
+#         "symbol" : symbol,
+#         "dir": direction,
+#         "size": size
+#     }
+#     write_to_exchange(exchange, jsonObject)
+#     print("Convert for order ", order_id)
+#     order_id += 1
     
 def executeCancel(id):
     jsonObject = {
@@ -91,20 +160,46 @@ def executeCancel(id):
     
 # ~~~~~============== Trading strats ==============~~~~~
 
+# Given a symbol and its (calculated) fairValue,
+# the algorithm will fulfill all existing buy/sell orders w.r.t the fairValue input
+def executeGenericOrder(symbol, fairValue, message, exchange):
+   buyArray = message["buy"]
+   sellArray = message["sell"]
+   buyOrders = {"size": 0, "price":0}
+   sellOrders = {"size": 0, "price": 100000000000000000}
+   for order in buyArray:
+       if order[0] > fairValue:
+           sellOrders["size"] += order[1]
+           sellOrders["price"] = min(sellOrders["price"], order[0])
+
+   for order in sellArray:
+       if order[0] < fairValue:
+           buyOrders["size"] += order[1]
+           buyOrders["price"] = max(buyOrders["price"], order[0])
+   
+   # buyOrders.size == 0 XOR sellOrders.size (should be)
+   if (sellOrders["size"] > 0):
+       executeOrder(symbol, "SELL", sellOrders["price"], sellOrders["size"], exchange)
+   if (buyOrders["size"] > 0):
+       executeOrder(symbol, "BUY", buyOrders["price"], buyOrders["size"], exchange)
+
+def executeADRPairStrategy():
+    #if ( >=valbzAvg + 15):
+    #elif(<= valbzAvg - 15):
+    return
+
+
 # if BUY orders > fairvalue, sell as much as possible
 # conversely for SELL orders
-def bondStrat1(message, exchange):
-    fairValue = 1000
-    buyArray = message["buy"]
-    sellArray = message["sell"]
+def executeBondStrat(exchange):
     buyOrders = {"size": 0, "price":0}
     sellOrders = {"size": 0, "price": 100000000000000000}
-    for order in buyArray:
+    for order in bondBook[0]: # bond[0] stores the information of BUY prices and sizes from the LATEST BOOK message for BOND
         if order[0] > fairValue:
             sellOrders["size"] += order[1]
             sellOrders["price"] = min(sellOrders["price"], order[0])
 
-    for order in sellArray:
+    for order in bond[1]: # bond[1] stores the information of SELL prices and sizes from the LATEST BOOK message for BOND
         if order[0] < fairValue:
             buyOrders["size"] += order[1]
             buyOrders["price"] = max(buyOrders["price"], order[0])
@@ -116,9 +211,25 @@ def bondStrat1(message, exchange):
         executeOrder("BOND", "BUY", buyOrders["price"], buyOrders["size"], exchange)
 
 def handleBonds(message, exchange):
-    bondStrat1(message, exchange)
+    # bond valuation tracker will be [[sizeOfBUYS, priceOfBUYS], [sizeOfSELLS, priceOfSELLS]]
+    buyArray = message["buy"]
+    sellArray = message["sell"]
+    bondBook[0] = buyArray
+    bondBook[1] = sellArray
     
-    
+# Collecting information
+# def handleVALBZ(message, exchange):
+#     buyArray = message["buy"]
+#     sellArray = message["sell"]
+
+
+# def buySymbolsSellETF(message, exchange):
+#     etcCalculatedFairValue = (3 * bondAvg + 2 * gsAvg + 3 * msAvg + 2 * wfcAvg) // 10 + 100
+#     if (etcCalculatedFairValue < xlfAvg):
+#         # Calculated fair value is smaller. Should convert to XLF
+        
+#     if (etcCalculatedFairValue > xlfAvg):
+#         # Calculated fair value is larger. Should convert to XLF
 
 # receives a "book" message to see prices
 # message format: {"type":"book","symbol":"SYM","buy":[[PRICE,SIZE], ...],"sell":[...]}
@@ -138,7 +249,13 @@ def handleBook(message, exchange):
     elif (message["symbol"] =="XLF"):
         return
 
-def execute():
+def execute(exchange):
+    # Perform checks here t determine what order to execute
+    # Whether  convert from ADR vie versa
+    # TODO executeADRPairStrategy()
+        # TODO buy symbols convert to ETF
+
+    executeBondStrat(exchange) # If no better trades to make
     return
     
 # ~~~~~============== DATA EXTRACTION CODE ==============~~~
@@ -146,20 +263,28 @@ def execute():
 # Read trade message and get current valuation for different symbols
 def getCurrentValuation(message):
     symbol = message["symbol"]
-    if symbol == "BOND":
+    global bondAvg, valbzAvg, valeAvg, gsAvg, msAvg, wfcAvg, xlfAvg
+    if symbol == "BOND"
         bond.append(message["price"])
+        bondAvg = mean(bond)
     elif symbol == "VALBZ":
         valbz.append(message["price"])
+        valbzAvg = mean(valbz)
     elif symbol == "VALE":
         vale.append(message["price"])
+        valeAvg = mean(vale)
     elif symbol == "GS":
         gs.append(message["price"])
+        gsAvg = mean(gs)
     elif symbol == "MS":
         ms.append(message["price"])
+        msAvg = mean(ms)
     elif symbol == "WFC":
         wfc.append(message["price"])
+        wfcAvg = mean(wfc)
     elif symbol == "XLF":
         xlf.append(message["price"])
+        xlfAvg = mean(xlf)
     else:
         print("Unknown symbol while getting current valuation")
 
@@ -198,7 +323,7 @@ def main():
             break
         
         handleMessage(message, exchange)
-        execute() # May or may not execute depending certain markers
+        execute(exchange) # May or may not execute depending certain markers
 
 if __name__ == "__main__":
     main()
