@@ -139,7 +139,7 @@ def handleBook(message, exchange):
         return
 
 def execute():
-    print("Executing order")
+    return
     
 # ~~~~~============== DATA EXTRACTION CODE ==============~~~
 
