@@ -44,7 +44,7 @@ def read_from_exchange(exchange):
 
 # ~~~~~============== SYMBOLS TRACKER ==============~~~
 
-# books will be in the format [[sizeOfBUYS, priceOfBUYS], [sizeOfSELLS, priceOfSELLS]]
+# books will be in the format [[priceOfBuys, sizeOfBUYS], [priceOfSELLS, sizeOfSELLS]]
 bondBook = [[], []]
 valbzBook = [[], []]
 valeBook = [[], []]
@@ -71,6 +71,9 @@ xlfAvg = 0
 
 order_id = 0
 
+isETFOrderFullfilled = True
+ETFOrderid = 0
+
 #valeSum = 0
 # valbzBuyAvg = 0
 # valbzSellAvg = 0
@@ -91,7 +94,7 @@ def mean(arr):
 
 # ~~~~~============== Execution Code ==============~~~~~
 def executeOrder(symbol, direction, price, size, exchange): # Direction is BUY or SELL
-    global order_id
+    global order_id, ETFOrderid
     if (price): 
         # if price exists. Is buy or sell order
         jsonObject = {
@@ -115,6 +118,9 @@ def executeOrder(symbol, direction, price, size, exchange): # Direction is BUY o
             "size": size
         }
         write_to_exchange(exchange, jsonObject)
+        if (symbol == "XLF"):
+            ETFOrderid = order_id
+            isETFOrderFullfilled = False
         order_id += 1
 
 
@@ -143,6 +149,7 @@ def executeGenericOrder(symbol, fairValue, exchange, isConvert):
         "XLF": xlfBook
     }
     targetBook = bookDict[symbol]
+    print("Target book is :" , targetBook)
     for order in targetBook[0]: # bond[0] stores the information of BUY prices and sizes from the LATEST BOOK message for BOND
         if order[0] > fairValue:
             sellOrders["size"] += order[1]
@@ -199,7 +206,9 @@ def executeGenericOrder(symbol, fairValue, exchange, isConvert):
 #     order_id += 1
 
 
-# def executeADRPairStrategy():
+# def executeADRPairStrategy():       
+#     fairValue = 
+#     executeGenericOrder("VALE", valbzAvg, )     
 #     sellOrders = {"size": 0, "price": 1000000000000000} 
 #     buyOrders = {"size": 0, "price": 0}
 #     for order in valbzBook[0]:
@@ -210,11 +219,9 @@ def executeGenericOrder(symbol, fairValue, exchange, isConvert):
 #         if (order[0] <= valbzAvg - 15):
 #             buyOrders["size"] += order[1]
 #             buyOrders["price"] = max(buyOrders["price"], order[0])
-#     if (buyOrders[size] > 0):            
-
+#     if (buyOrders[size] > 0):                
+#       executeOrder()
 #     if (sellOrders[size] > 0):
-
-    
 
 
 # if BUY orders > fairvalue, sell as much as possible
@@ -230,7 +237,16 @@ def executeBondStrat(exchange):
 
 
 def executeXlfStrat(exchange):
-    etcCalculatedFairValue = (3 * bondAvg + 2 * gsAvg + 3 * msAvg + 2 * wfcAvg + 100) // 10 
+    global isETFOrderFullfilled
+
+    if (not isETFOrderFullfilled):
+        return
+    # etcCalculatedFairValue = (3 * bondAvg + 2 * gsAvg + 3 * msAvg + 2 * wfcAvg + 100) // 10 
+    bondfair = (bondBook[0][0][0] + bondBook[1][0][0]) / 2
+    gsfair = (gsBook[0][0][0] + gsBook[1][0][0]) / 2
+    msfair = (msBook[0][0][0] + msBook[1][0][0]) / 2
+    wfcfair = (wfcBook[0][0][0] + wfcBook[1][0][0]) / 2
+    etcCalculatedFairValue =  (3*bondfair + 2*gsfair + 3*msfair + 2*wfcfair + 100) // 10
     executeGenericOrder("XLF", etcCalculatedFairValue, exchange, False)
 
 # receives a "book" message to see prices
@@ -245,22 +261,22 @@ def handleBook(message, exchange):
     if (symbol == "BOND"):
         bondBook[0] = copy.deepcopy(buyArray)
         bondBook[1] = copy.deepcopy(sellArray)
-    elif (symbol =="VALBZ"):
+    elif (symbol == "VALBZ"):
         valbzBook[0] = copy.deepcopy(buyArray)
         valbzBook[1] = copy.deepcopy(sellArray)
-    elif (symbol =="VALE"):
+    elif (symbol == "VALE"):
         valeBook[0] = copy.deepcopy(buyArray)
         valeBook[1] = copy.deepcopy(sellArray)
-    elif (symbol =="GS"):
+    elif (symbol == "GS"):
         gsBook[0] = copy.deepcopy(buyArray)
         gsBook[1] = copy.deepcopy(sellArray)
-    elif (symbol =="MS"):
+    elif (symbol == "MS"):
         msBook[0] = copy.deepcopy(buyArray)
         msBook[1] = copy.deepcopy(sellArray)
-    elif (symbol =="WFC"):
+    elif (symbol == "WFC"):
         wfcBook[0] = copy.deepcopy(buyArray)
         wfcBook[1] = copy.deepcopy(sellArray)
-    elif (symbol =="XLF"):
+    elif (symbol == "XLF"):
         xlfBook[0] = copy.deepcopy(buyArray)
         xlfBook[1] = copy.deepcopy(sellArray)
 
@@ -309,6 +325,8 @@ def getCurrentValuation(message):
 
 # Extract market data from message
 def handleMessage(message, exchange):
+    global ETFOrderid, isETFOrderFullfilled
+
     type = message["type"]
     if type == "book":
         handleBook(message, exchange)
@@ -316,6 +334,8 @@ def handleMessage(message, exchange):
         getCurrentValuation(message)
     elif type == "ack":
         print("ACK: ", message)
+        if (message["order_id"] == ETFOrderid):
+            isETFOrderFullfilled = True
     elif type == "reject":
         print(message)
     else:
