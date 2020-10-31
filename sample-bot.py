@@ -193,6 +193,7 @@ def executeADRPairStrategy():
 # if BUY orders > fairvalue, sell as much as possible
 # conversely for SELL orders
 def executeBondStrat(exchange):
+    fairValue = 1000
     buyOrders = {"size": 0, "price":0}
     sellOrders = {"size": 0, "price": 100000000000000000}
     for order in bondBook[0]: # bond[0] stores the information of BUY prices and sizes from the LATEST BOOK message for BOND
