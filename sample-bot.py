@@ -10,6 +10,7 @@ from __future__ import print_function
 import sys
 import socket
 import json
+import copy
 
 # ~~~~~============== CONFIGURATION  ==============~~~~~
 # replace REPLACEME with your team name!
@@ -214,8 +215,8 @@ def handleBonds(message, exchange):
     # bond valuation tracker will be [[sizeOfBUYS, priceOfBUYS], [sizeOfSELLS, priceOfSELLS]]
     buyArray = message["buy"]
     sellArray = message["sell"]
-    bondBook[0] = buyArray
-    bondBook[1] = sellArray
+    bondBook[0] = copy.deepcopy(buyArray)
+    bondBook[1] = copy.deepcopy(sellArray)
     print("Bond book is ", bondBook)
     
 # Collecting information
