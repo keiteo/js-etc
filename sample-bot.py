@@ -92,7 +92,10 @@ def mean(arr):
     return sum(arr)//len(arr)
 
 # ~~~~~============== Execution Code ==============~~~~~
-def executeOrder(symbol, direction, price, size, exchange): # Direction is BUY or SELL
+def executeOrder(symbol, direction, price, size, exchange): 
+    # Direction is BUY or SELL
+    global order_id
+
     if (price): 
         # if price exists. Is buy or sell order
         jsonObject = {
