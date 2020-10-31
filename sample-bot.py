@@ -168,7 +168,12 @@ def handleMessage(message, exchange):
         handleBook(message, exchange)
     elif type == "trade":
         getCurrentValuation(message)
-    
+    elif type == "ack":
+        print(message)
+    elif type == "reject":
+        print(message)
+    else:
+        print("Other message: ", message)
 
         
 # ~~~~~============== MAIN LOOP ==============~~~~~
