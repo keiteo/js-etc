@@ -96,7 +96,7 @@ def executeCancel(id):
 def bondStrat1(message, exchange):
     fairValue = 1000
     buyArray = message["buy"]
-    sellArray = message.["sell"]
+    sellArray = message["sell"]
     buyOrders = {"size": 0, "price":0}
     sellOrders = {"size": 0, "price": 0}
     for order in buyArray:
