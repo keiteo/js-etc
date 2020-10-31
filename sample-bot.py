@@ -16,7 +16,7 @@ import json
 team_name="YOLOLADS"
 # This variable dictates whether or not the bot is connecting to the prod
 # or test exchange. Be careful with this switch!
-test_mode = False
+test_mode = sys.argv[1] == "dev"
 
 # This setting changes which test exchange is connected to.
 # 0 is prod-like
@@ -111,8 +111,8 @@ def bondStrat1(message, exchange):
     
     # buyOrders.size == 0 XOR sellOrders.size (should be)
     if (sellOrders["size"] > 0):
-         executeOrder("BOND", "SELL", sellOrders["price"], sellOrders["size"], exchange)
-    elif (sellOrders["size"] > 0):
+        executeOrder("BOND", "SELL", sellOrders["price"], sellOrders["size"], exchange)
+    if (buyOrders["size"] > 0):
         executeOrder("BOND", "BUY", buyOrders["price"], buyOrders["size"], exchange)
 
 def handleBonds(message, exchange):
@@ -169,7 +169,7 @@ def handleMessage(message, exchange):
     elif type == "trade":
         getCurrentValuation(message)
     elif type == "ack":
-        print(message)
+        print("ACK: ", message)
     elif type == "reject":
         print(message)
     else:
