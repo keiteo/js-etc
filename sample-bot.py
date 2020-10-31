@@ -84,7 +84,7 @@ def executeConvert(symbol, direction, size):
 def executeCancel(id):
     jsonObject = {
         "type": "cancel",
-        "order_id", id
+        "order_id": id
     } 
     write_to_exchange(exchange, jsonObject)
     print("Cancelled order ", id)
