@@ -107,7 +107,7 @@ def bondStrat1(message, exchange):
     for order in sellArray:
         if order[0] < fairValue:
             buyOrders["size"] += order[1]
-            buyOrders["price"] = max(sellOrders["price"], order[0])
+            buyOrders["price"] = max(buyOrders["price"], order[0])
     
     # buyOrders.size == 0 XOR sellOrders.size (should be)
     if (sellOrders["size"] > 0):
@@ -195,6 +195,7 @@ def main():
             break
         
         handleMessage(message, exchange)
+        execute() # May or may not execute depending certain markers
 
 if __name__ == "__main__":
     main()
