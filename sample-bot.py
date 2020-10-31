@@ -138,6 +138,9 @@ def handleBook(message, exchange):
     elif (message["symbol"] =="XLF"):
         return
 
+def execute():
+    print("Executing order")
+    
 # ~~~~~============== DATA EXTRACTION CODE ==============~~~
 
 # Read trade message and get current valuation for different symbols
