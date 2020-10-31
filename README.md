@@ -1,4 +1,4 @@
-# js-etc
+# Jane Street ETC
 Team Yolo Lads
 - [@keiteo](https://github.com/keiteo)
 - [@Lucria](https://github.com/Lucria)
