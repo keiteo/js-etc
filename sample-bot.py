@@ -264,7 +264,7 @@ def execute(exchange):
 def getCurrentValuation(message):
     symbol = message["symbol"]
     global bondAvg, valbzAvg, valeAvg, gsAvg, msAvg, wfcAvg, xlfAvg
-    if symbol == "BOND"
+    if symbol == "BOND":
         bond.append(message["price"])
         bondAvg = mean(bond)
     elif symbol == "VALBZ":
