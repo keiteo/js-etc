@@ -43,7 +43,15 @@ def read_from_exchange(exchange):
     return json.loads(exchange.readline())
 
 # ~~~~~============== SYMBOLS TRACKER ==============~~~
+
+# books will be in the format [[sizeOfBUYS, priceOfBUYS], [sizeOfSELLS, priceOfSELLS]]
 bondBook = [[], []]
+valbzBook = [[], []]
+valeBook = [[], []]
+gsBook = [[], []]
+msBook = [[], []]
+wfcBook = [[], []]
+xlfBook = [[], []]
 
 bond = []
 valbz = []
@@ -52,7 +60,6 @@ gs = []
 ms = []
 wfc = []
 xlf = []
-order_id = 0
 
 bondAvg = 0
 valbzAvg = 0
@@ -61,6 +68,8 @@ gsAvg = 0
 msAvg = 0
 wfcAvg = 0
 xlfAvg = 0
+
+order_id = 0
 
 #valeSum = 0
 # valbzBuyAvg = 0
@@ -108,6 +117,59 @@ def executeOrder(symbol, direction, price, size, exchange): # Direction is BUY o
         write_to_exchange(exchange, jsonObject)
         order_id += 1
 
+
+def executeCancel(id):
+    jsonObject = {
+        "type": "cancel",
+        "order_id": id
+    } 
+    write_to_exchange(exchange, jsonObject)
+    print("Cancelled order ", id)
+    
+# ~~~~~============== Trading strats ==============~~~~~
+
+# Given a symbol and its (calculated) fairValue,
+# the algorithm will fulfill all existing buy/sell orders w.r.t the fairValue input
+def executeGenericOrder(symbol, fairValue, exchange, isConvert):
+    buyOrders = {"size": 0, "price":0}
+    sellOrders = {"size": 0, "price": 100000000000000000}
+    bookDict = {
+        "BOND": bondBook,
+        "VALBZ": valbzBook,
+        "VALE": valeBook,
+        "GS": gsBook,
+        "MS": msBook,
+        "WFC": wfcBook,
+        "XLF": xlfBook
+    }
+    targetBook = bookDict[symbol]
+    for order in targetBook[0]: # bond[0] stores the information of BUY prices and sizes from the LATEST BOOK message for BOND
+        if order[0] > fairValue:
+            sellOrders["size"] += order[1]
+            sellOrders["price"] = min(sellOrders["price"], order[0])
+
+    for order in targetBook[1]: # bond[1] stores the information of SELL prices and sizes from the LATEST BOOK message for BOND
+        if order[0] < fairValue:
+            buyOrders["size"] += order[1]
+            buyOrders["price"] = max(buyOrders["price"], order[0])
+    
+    if (sellOrders["size"] > 0):
+        if (isConvert):
+            if (symbol == "XLF"):
+                executeOrder(symbol, "SELL", False, 10, exchange)
+                return
+            executeOrder(symbol, "SELL", False, sellOrders["size"], exchange)
+        else:
+            executeOrder(symbol, "SELL", sellOrders["price"], sellOrders["size"], exchange)
+    if (buyOrders["size"] > 0):
+        if (isConvert):
+            if (symbol == "XLF"):
+                executeOrder(symbol, "BUY", False, 10, exchange)
+                return
+            executeOrder(symbol, "BUY", False, buyOrders["size"], exchange)
+        else:
+            executeOrder(symbol, "BUY", buyOrders["price"], buyOrders["size"], exchange) 
+
 # def convertFromVALE(size):
 #     global order_id
 
@@ -137,88 +199,29 @@ def executeOrder(symbol, direction, price, size, exchange): # Direction is BUY o
 #     order_id += 1
 
 
-# def executeConvert(symbol, direction, size):
-#     global order_id
-    
-#     jsonObject = {
-#         "type": "convert",
-#         "order_id": order_id,
-#         "symbol" : symbol,
-#         "dir": direction,
-#         "size": size
-#     }
-#     write_to_exchange(exchange, jsonObject)
-#     print("Convert for order ", order_id)
-#     order_id += 1
-    
-def executeCancel(id):
-    jsonObject = {
-        "type": "cancel",
-        "order_id": id
-    } 
-    write_to_exchange(exchange, jsonObject)
-    print("Cancelled order ", id)
-    
-# ~~~~~============== Trading strats ==============~~~~~
+# def executeADRPairStrategy():
+#     sellOrders = {"size": 0, "price": 1000000000000000} 
+#     buyOrders = {"size": 0, "price": 0}
+#     for order in valbzBook[0]:
+#         if (order[0] >= valbzAvg + 15):
+#             sellOrders["size"] += order[1]
+#             sellOrders["price"] = min(sellOrders["price"], order[0])
+#     for order in valbzBook[1]:
+#         if (order[0] <= valbzAvg - 15):
+#             buyOrders["size"] += order[1]
+#             buyOrders["price"] = max(buyOrders["price"], order[0])
+#     if (buyOrders[size] > 0):            
 
-# Given a symbol and its (calculated) fairValue,
-# the algorithm will fulfill all existing buy/sell orders w.r.t the fairValue input
-def executeGenericOrder(symbol, fairValue, message, exchange):
-   buyArray = message["buy"]
-   sellArray = message["sell"]
-   buyOrders = {"size": 0, "price":0}
-   sellOrders = {"size": 0, "price": 100000000000000000}
-   for order in buyArray:
-       if order[0] > fairValue:
-           sellOrders["size"] += order[1]
-           sellOrders["price"] = min(sellOrders["price"], order[0])
+#     if (sellOrders[size] > 0):
 
-   for order in sellArray:
-       if order[0] < fairValue:
-           buyOrders["size"] += order[1]
-           buyOrders["price"] = max(buyOrders["price"], order[0])
-   
-   # buyOrders.size == 0 XOR sellOrders.size (should be)
-   if (sellOrders["size"] > 0):
-       executeOrder(symbol, "SELL", sellOrders["price"], sellOrders["size"], exchange)
-   if (buyOrders["size"] > 0):
-       executeOrder(symbol, "BUY", buyOrders["price"], buyOrders["size"], exchange)
-
-def executeADRPairStrategy():
-    #if ( >=valbzAvg + 15):
-    #elif(<= valbzAvg - 15):
-    return
+    
 
 
 # if BUY orders > fairvalue, sell as much as possible
 # conversely for SELL orders
 def executeBondStrat(exchange):
-    fairValue = 1000
-    buyOrders = {"size": 0, "price":0}
-    sellOrders = {"size": 0, "price": 100000000000000000}
-    for order in bondBook[0]: # bond[0] stores the information of BUY prices and sizes from the LATEST BOOK message for BOND
-        if order[0] > fairValue:
-            sellOrders["size"] += order[1]
-            sellOrders["price"] = min(sellOrders["price"], order[0])
+    executeGenericOrder("BOND", 1000, exchange, False)
 
-    for order in bondBook[1]: # bond[1] stores the information of SELL prices and sizes from the LATEST BOOK message for BOND
-        if order[0] < fairValue:
-            buyOrders["size"] += order[1]
-            buyOrders["price"] = max(buyOrders["price"], order[0])
-    
-    # buyOrders.size == 0 XOR sellOrders.size (should be)
-    if (sellOrders["size"] > 0):
-        executeOrder("BOND", "SELL", sellOrders["price"], sellOrders["size"], exchange)
-    if (buyOrders["size"] > 0):
-        executeOrder("BOND", "BUY", buyOrders["price"], buyOrders["size"], exchange)
-
-def handleBonds(message, exchange):
-    # bond valuation tracker will be [[sizeOfBUYS, priceOfBUYS], [sizeOfSELLS, priceOfSELLS]]
-    buyArray = message["buy"]
-    sellArray = message["sell"]
-    bondBook[0] = copy.deepcopy(buyArray)
-    bondBook[1] = copy.deepcopy(sellArray)
-    print("Bond book is ", bondBook)
     
 # Collecting information
 # def handleVALBZ(message, exchange):
@@ -226,39 +229,48 @@ def handleBonds(message, exchange):
 #     sellArray = message["sell"]
 
 
-# def buySymbolsSellETF(message, exchange):
-#     etcCalculatedFairValue = (3 * bondAvg + 2 * gsAvg + 3 * msAvg + 2 * wfcAvg) // 10 + 100
-#     if (etcCalculatedFairValue < xlfAvg):
-#         # Calculated fair value is smaller. Should convert to XLF
-        
-#     if (etcCalculatedFairValue > xlfAvg):
-#         # Calculated fair value is larger. Should convert to XLF
+def executeXlfStrat(exchange):
+    etcCalculatedFairValue = (3 * bondAvg + 2 * gsAvg + 3 * msAvg + 2 * wfcAvg + 100) // 10 
+    executeGenericOrder("XLF", etcCalculatedFairValue, exchange, False)
 
 # receives a "book" message to see prices
 # message format: {"type":"book","symbol":"SYM","buy":[[PRICE,SIZE], ...],"sell":[...]}
 def handleBook(message, exchange):
-    if (message["symbol"] == "BOND"):
-        handleBonds(message, exchange)
-    elif (message["symbol"] =="VALBZ"):
-        return
-    elif (message["symbol"] =="VALE"):
-        return
-    elif (message["symbol"] =="GS"):
-        return
-    elif (message["symbol"] =="MS"):
-        return
-    elif (message["symbol"] =="WFC"):
-        return
-    elif (message["symbol"] =="XLF"):
-        return
+    symbol = message["symbol"]
+
+    buyArray = message["buy"]
+    sellArray = message["sell"]
+
+    # Update the corresponding symbolBook to latest from updates from market BOOK message
+    if (symbol == "BOND"):
+        bondBook[0] = copy.deepcopy(buyArray)
+        bondBook[1] = copy.deepcopy(sellArray)
+    elif (symbol =="VALBZ"):
+        valbzBook[0] = copy.deepcopy(buyArray)
+        valbzBook[1] = copy.deepcopy(sellArray)
+    elif (symbol =="VALE"):
+        valeBook[0] = copy.deepcopy(buyArray)
+        valeBook[1] = copy.deepcopy(sellArray)
+    elif (symbol =="GS"):
+        gsBook[0] = copy.deepcopy(buyArray)
+        gsBook[1] = copy.deepcopy(sellArray)
+    elif (symbol =="MS"):
+        msBook[0] = copy.deepcopy(buyArray)
+        msBook[1] = copy.deepcopy(sellArray)
+    elif (symbol =="WFC"):
+        wfcBook[0] = copy.deepcopy(buyArray)
+        wfcBook[1] = copy.deepcopy(sellArray)
+    elif (symbol =="XLF"):
+        xlfBook[0] = copy.deepcopy(buyArray)
+        xlfBook[1] = copy.deepcopy(sellArray)
+
 
 def execute(exchange):
     try:
         # Perform checks here t determine what order to execute
         # Whether  convert from ADR vie versa
         # TODO executeADRPairStrategy()
-        # TODO buy symbols convert to ETF
-
+        executeXlfStrat(exchange)
         executeBondStrat(exchange) # If no better trades to make
         return
     except Exception as e:
