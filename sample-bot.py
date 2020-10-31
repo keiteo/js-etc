@@ -253,10 +253,6 @@ def executeBondStrat(exchange):
 
 
 def executeXlfStrat(exchange):
-    global isETFOrderFullfilled
-
-    if (not isETFOrderFullfilled):
-        return
     # etcCalculatedFairValue = (3 * bondAvg + 2 * gsAvg + 3 * msAvg + 2 * wfcAvg + 100) // 10 
     bondfair = (bondBook[0][0][0] + bondBook[1][0][0]) / 2
     gsfair = (gsBook[0][0][0] + gsBook[1][0][0]) / 2
