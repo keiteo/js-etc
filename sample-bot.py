@@ -147,7 +147,6 @@ def executeGenericOrder(symbol, fairValue, exchange, isConvert):
         "XLF": xlfBook
     }
     targetBook = bookDict[symbol]
-    print("Target book is :" , targetBook)
     for order in targetBook[0]: # bond[0] stores the information of BUY prices and sizes from the LATEST BOOK message for BOND
         if order[0] > fairValue:
             sellOrders["size"] += order[1]
@@ -218,13 +217,15 @@ def getAverage(arr):
         totalSize += size
     return totalPrice / totalSize
 
-# # def executeADRPairStrategy():       
-#     global valbzAvg
-#     valbzBookBuyAvg = getAverage(valbzBook[0])
-#     valbzBookSellAvg = getAverage(valbzBook[1])
-#     if (valbzBookBuyAvg >= valbzAvg + 15):
-#         executeGenericOrder("VALE", 0, exchange)
-#     else
+def executeADRPairStrategy(exchange):       
+    valefair = (valbzBook[0][0][0] + valbzBook[1][0][0]) /2
+    executeGenericOrder("VALE", valefair, exchange, False)
+    # global valbzAvg
+    # valbzBookBuyAvg = getAverage(valbzBook[0])
+    # valbzBookSellAvg = getAverage(valbzBook[1])
+    # if (valbzBookBuyAvg >= valbzAvg + 15):
+    #     executeGenericOrder("VALE", 0, exchange)
+    # else
 
 #     fairValue = 
 #     executeGenericOrder("VALE", valbzAvg, )     
@@ -300,7 +301,7 @@ def execute(exchange):
     try:
         # Perform checks here t determine what order to execute
         # Whether  convert from ADR vie versa
-        # TODO executeADRPairStrategy()
+        executeADRPairStrategy(exchange)
         executeXlfStrat(exchange)
         executeBondStrat(exchange) # If no better trades to make
         return
