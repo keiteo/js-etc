@@ -302,7 +302,7 @@ def execute(exchange):
         # Perform checks here t determine what order to execute
         # Whether  convert from ADR vie versa
         executeADRPairStrategy(exchange)
-        executeXlfStrat(exchange)
+        # executeXlfStrat(exchange)
         executeBondStrat(exchange) # If no better trades to make
         return
     except Exception as e:
