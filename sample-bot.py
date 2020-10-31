@@ -71,8 +71,7 @@ xlfAvg = 0
 
 order_id = 0
 
-isETFOrderFullfilled = True
-ETFOrderid = 0
+numberofETFOrder = 0
 
 #valeSum = 0
 # valbzBuyAvg = 0
@@ -94,7 +93,6 @@ def mean(arr):
 
 # ~~~~~============== Execution Code ==============~~~~~
 def executeOrder(symbol, direction, price, size, exchange): # Direction is BUY or SELL
-    global order_id, ETFOrderid
     if (price): 
         # if price exists. Is buy or sell order
         jsonObject = {
@@ -118,9 +116,6 @@ def executeOrder(symbol, direction, price, size, exchange): # Direction is BUY o
             "size": size
         }
         write_to_exchange(exchange, jsonObject)
-        if (symbol == "XLF"):
-            ETFOrderid = order_id
-            isETFOrderFullfilled = False
         order_id += 1
 
 
@@ -163,6 +158,8 @@ def executeGenericOrder(symbol, fairValue, exchange, isConvert):
     if (sellOrders["size"] > 0):
         if (isConvert):
             if (symbol == "XLF"):
+                if (numberofETFOrder > 0):
+                    numberofETFOrder -= 1
                 executeOrder(symbol, "SELL", False, 10, exchange)
                 return
             executeOrder(symbol, "SELL", False, sellOrders["size"], exchange)
@@ -171,6 +168,9 @@ def executeGenericOrder(symbol, fairValue, exchange, isConvert):
     if (buyOrders["size"] > 0):
         if (isConvert):
             if (symbol == "XLF"):
+                if (numberofETFOrder == 3):
+                    return
+                numberofETFOrder += 1
                 executeOrder(symbol, "BUY", False, 10, exchange)
                 return
             executeOrder(symbol, "BUY", False, buyOrders["size"], exchange)
@@ -205,8 +205,24 @@ def executeGenericOrder(symbol, fairValue, exchange, isConvert):
 #     print("Convert from VALBZ ", order_id)
 #     order_id += 1
 
+def getAverage(arr):
+    totalPrice = 0
+    totalSize = 0
+    for entry in arr:
+        price = entry[0]
+        size = entry[1]
+        totalPrice += price * size
+        totalSize += size
+    return totalPrice / totalSize
 
-# def executeADRPairStrategy():       
+# # def executeADRPairStrategy():       
+#     global valbzAvg
+#     valbzBookBuyAvg = getAverage(valbzBook[0])
+#     valbzBookSellAvg = getAverage(valbzBook[1])
+#     if (valbzBookBuyAvg >= valbzAvg + 15):
+#         executeGenericOrder("VALE", 0, exchange)
+#     else
+
 #     fairValue = 
 #     executeGenericOrder("VALE", valbzAvg, )     
 #     sellOrders = {"size": 0, "price": 1000000000000000} 
@@ -325,8 +341,6 @@ def getCurrentValuation(message):
 
 # Extract market data from message
 def handleMessage(message, exchange):
-    global ETFOrderid, isETFOrderFullfilled
-
     type = message["type"]
     if type == "book":
         handleBook(message, exchange)
@@ -334,8 +348,6 @@ def handleMessage(message, exchange):
         getCurrentValuation(message)
     elif type == "ack":
         print("ACK: ", message)
-        if (message["order_id"] == ETFOrderid):
-            isETFOrderFullfilled = True
     elif type == "reject":
         print(message)
     else:
