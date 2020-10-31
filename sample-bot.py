@@ -16,7 +16,7 @@ import json
 team_name="YOLOLADS"
 # This variable dictates whether or not the bot is connecting to the prod
 # or test exchange. Be careful with this switch!
-test_mode = True
+test_mode = False
 
 # This setting changes which test exchange is connected to.
 # 0 is prod-like
@@ -98,7 +98,7 @@ def bondStrat1(message, exchange):
     buyArray = message["buy"]
     sellArray = message["sell"]
     buyOrders = {"size": 0, "price":0}
-    sellOrders = {"size": 0, "price": 100}
+    sellOrders = {"size": 0, "price": 100000000000000000}
     for order in buyArray:
         if order[0] > fairValue:
             sellOrders["size"] += order[1]
