@@ -109,11 +109,11 @@ def bondStrat1(message, exchange):
             buyOrders["size"] += order[1]
             buyOrders["price"] = max(sellOrders["price"], order[0])
     
-    # buyOrder.size == 0 XOR sellOrder.size (should be)
-    if (sellOrder["size"] > 0):
-         executeOrder("BOND", "SELL", sellOrder["price"], sellOrder["size"], exchange)
-    elif (sellOrder["size"] > 0):
-        executeOrder("BOND", "BUY", buyOrder["price"], buyOrder["size"], exchange)
+    # buyOrders.size == 0 XOR sellOrders.size (should be)
+    if (sellOrders["size"] > 0):
+         executeOrder("BOND", "SELL", sellOrders["price"], sellOrders["size"], exchange)
+    elif (sellOrders["size"] > 0):
+        executeOrder("BOND", "BUY", buyOrders["price"], buyOrders["size"], exchange)
 
 def handleBonds(message, exchange):
     bondStrat1(message, exchange)
@@ -135,7 +135,7 @@ def handleBook(message, exchange):
         return
     elif (message["symbol"] =="WFC"):
         return
-    elif (message["symbol"] =="XLF"):
+    elif (message["symbol"]] =="XLF"):
         return
 
 # ~~~~~============== DATA EXTRACTION CODE ==============~~~
