@@ -201,7 +201,7 @@ def executeBondStrat(exchange):
             sellOrders["size"] += order[1]
             sellOrders["price"] = min(sellOrders["price"], order[0])
 
-    for order in bond[1]: # bond[1] stores the information of SELL prices and sizes from the LATEST BOOK message for BOND
+    for order in bondBook[1]: # bond[1] stores the information of SELL prices and sizes from the LATEST BOOK message for BOND
         if order[0] < fairValue:
             buyOrders["size"] += order[1]
             buyOrders["price"] = max(buyOrders["price"], order[0])
@@ -298,7 +298,6 @@ def getCurrentValuation(message):
 # Extract market data from message
 def handleMessage(message, exchange):
     type = message["type"]
-    
     if type == "book":
         handleBook(message, exchange)
     elif type == "trade":
