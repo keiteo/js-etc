@@ -42,7 +42,7 @@ def read_from_exchange(exchange):
     return json.loads(exchange.readline())
 
 # ~~~~~============== SYMBOLS TRACKER ==============~~~
-bondBook = []
+bondBook = [[], []]
 
 bond = []
 valbz = []
@@ -216,6 +216,7 @@ def handleBonds(message, exchange):
     sellArray = message["sell"]
     bondBook[0] = buyArray
     bondBook[1] = sellArray
+    print("Bond book is ", bondBook)
     
 # Collecting information
 # def handleVALBZ(message, exchange):
@@ -250,13 +251,17 @@ def handleBook(message, exchange):
         return
 
 def execute(exchange):
-    # Perform checks here t determine what order to execute
-    # Whether  convert from ADR vie versa
-    # TODO executeADRPairStrategy()
+    try:
+        # Perform checks here t determine what order to execute
+        # Whether  convert from ADR vie versa
+        # TODO executeADRPairStrategy()
         # TODO buy symbols convert to ETF
 
-    executeBondStrat(exchange) # If no better trades to make
-    return
+        executeBondStrat(exchange) # If no better trades to make
+        return
+    except Exception as e:
+        print("No orders made due to ", e)
+
     
 # ~~~~~============== DATA EXTRACTION CODE ==============~~~
 
