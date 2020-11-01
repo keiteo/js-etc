@@ -112,7 +112,7 @@ def executeOrder(symbol, direction, price, size, exchange):
         order_id += 1
 
 
-def executeCancel(id):
+def executeCancel(id, exchange):
     jsonObject = {"type": "cancel", "order_id": id}
     write_to_exchange(exchange, jsonObject)
     print("Cancelled order ", id)
@@ -150,28 +150,9 @@ def executeGenericOrder(symbol, fairValue, exchange, isConvert):
             buyOrders["price"] = max(buyOrders["price"], order[0])
 
     if sellOrders["size"] > 0:
-        if isConvert:
-            if symbol == "XLF":
-                if numberofETFOrder > 0:
-                    numberofETFOrder -= 1
-                executeOrder(symbol, "SELL", False, 10, exchange)
-                return
-            executeOrder(symbol, "SELL", False, sellOrders["size"], exchange)
-        else:
-            executeOrder(
-                symbol, "SELL", sellOrders["price"], sellOrders["size"], exchange
-            )
+        executeOrder(symbol, "SELL", sellOrders["price"], sellOrders["size"], exchange)
     if buyOrders["size"] > 0:
-        if isConvert:
-            if symbol == "XLF":
-                if numberofETFOrder == 3:
-                    return
-                numberofETFOrder += 1
-                executeOrder(symbol, "BUY", False, 10, exchange)
-                return
-            executeOrder(symbol, "BUY", False, buyOrders["size"], exchange)
-        else:
-            executeOrder(symbol, "BUY", buyOrders["price"], buyOrders["size"], exchange)
+        executeOrder(symbol, "BUY", buyOrders["price"], buyOrders["size"], exchange)
 
 
 def getAverage(arr):
