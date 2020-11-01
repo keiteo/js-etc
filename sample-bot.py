@@ -73,20 +73,6 @@ order_id = 0
 
 numberofETFOrder = 0
 
-#valeSum = 0
-# valbzBuyAvg = 0
-# valbzSellAvg = 0
-# valeBuyAvg = 0
-# valeSellAvg = 0
-# valbzBuSSize = 0
-# valbzSellSize = 0
-# valeBuySize = 0
-# valeSellSize = 0
-# valbzBuySum = 0
-# valbzSellSum = 0
-# valbzBuySum = 0
-# valbzSellSize = 0
-
 
 def mean(arr):
     return sum(arr)//len(arr)
@@ -179,33 +165,6 @@ def executeGenericOrder(symbol, fairValue, exchange, isConvert):
         else:
             executeOrder(symbol, "BUY", buyOrders["price"], buyOrders["size"], exchange) 
 
-# def convertFromVALE(size):
-#     global order_id
-
-#     jsonObject = {
-#         "type": "convert",
-#         "order_id": order_id,
-#         "symbol": "VALE",
-#         "dir": "BUY",
-#         "size": size
-#     }
-#     write_to_exchange(exchange, jsonObject)
-#     print("Convert from VALE ", order_id)
-#     order_id += 1
-
-# def convertFromVALBZ(size):
-#     global order_id
-
-#     jsonObject = {
-#         "type": "convert",
-#         "order_id": order_id,
-#         "symbol": "VALBZ",
-#         "dir": "BUY",
-#         "size": size
-#     }
-#     write_to_exchange(exchange, jsonObject)
-#     print("Convert from VALBZ ", order_id)
-#     order_id += 1
 
 def getAverage(arr):
     totalPrice = 0
@@ -220,44 +179,13 @@ def getAverage(arr):
 def executeADRPairStrategy(exchange):       
     valefair = (valbzBook[0][0][0] + valbzBook[1][0][0]) /2
     executeGenericOrder("VALE", valefair, exchange, False)
-    # global valbzAvg
-    # valbzBookBuyAvg = getAverage(valbzBook[0])
-    # valbzBookSellAvg = getAverage(valbzBook[1])
-    # if (valbzBookBuyAvg >= valbzAvg + 15):
-    #     executeGenericOrder("VALE", 0, exchange)
-    # else
 
-#     fairValue = 
-#     executeGenericOrder("VALE", valbzAvg, )     
-#     sellOrders = {"size": 0, "price": 1000000000000000} 
-#     buyOrders = {"size": 0, "price": 0}
-#     for order in valbzBook[0]:
-#         if (order[0] >= valbzAvg + 15):
-#             sellOrders["size"] += order[1]
-#             sellOrders["price"] = min(sellOrders["price"], order[0])
-#     for order in valbzBook[1]:
-#         if (order[0] <= valbzAvg - 15):
-#             buyOrders["size"] += order[1]
-#             buyOrders["price"] = max(buyOrders["price"], order[0])
-#     if (buyOrders[size] > 0):                
-#       executeOrder()
-#     if (sellOrders[size] > 0):
-
-
-# if BUY orders > fairvalue, sell as much as possible
-# conversely for SELL orders
 def executeBondStrat(exchange):
     executeGenericOrder("BOND", 1000, exchange, False)
 
-    
-# Collecting information
-# def handleVALBZ(message, exchange):
-#     buyArray = message["buy"]
-#     sellArray = message["sell"]
 
 
 def executeXlfStrat(exchange):
-    # etcCalculatedFairValue = (3 * bondAvg + 2 * gsAvg + 3 * msAvg + 2 * wfcAvg + 100) // 10 
     bondfair = (bondBook[0][0][0] + bondBook[1][0][0]) / 2
     gsfair = (gsBook[0][0][0] + gsBook[1][0][0]) / 2
     msfair = (msBook[0][0][0] + msBook[1][0][0]) / 2
