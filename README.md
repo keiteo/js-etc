@@ -1,5 +1,6 @@
 # Jane Street ETC
 Team Yolo Lads
+
 ![Final Hour Results](final-hour-results.png)
 
 - [@keiteo](https://github.com/keiteo)
